@@ -1,14 +1,11 @@
+import { Duration } from "aws-cdk-lib";
 import {
-  AllowedMethods,
   CachePolicy,
   Distribution,
   IDistribution,
   OriginRequestHeaderBehavior,
   OriginRequestPolicy,
   OriginRequestQueryStringBehavior,
-  PriceClass,
-  ResponseHeadersPolicy,
-  SecurityPolicyProtocol,
   ViewerProtocolPolicy,
 } from "aws-cdk-lib/aws-cloudfront";
 import { FunctionUrlOrigin } from "aws-cdk-lib/aws-cloudfront-origins";
@@ -38,17 +35,19 @@ export class CloudFront extends Construct {
       }
     );
 
+    const cachePolicy = new CachePolicy(this, "CachePolicy", {
+      minTtl: Duration.seconds(0),
+      maxTtl: Duration.days(365),
+      defaultTtl: Duration.hours(24),
+    });
+
     this.distribution = new Distribution(this, "Distribution", {
       defaultBehavior: {
-        allowedMethods: AllowedMethods.ALLOW_ALL,
         origin,
         originRequestPolicy,
+        cachePolicy,
         viewerProtocolPolicy: ViewerProtocolPolicy.HTTPS_ONLY,
-        cachePolicy: CachePolicy.CACHING_DISABLED,
-        responseHeadersPolicy: ResponseHeadersPolicy.CORS_ALLOW_ALL_ORIGINS,
       },
-      minimumProtocolVersion: SecurityPolicyProtocol.TLS_V1_2_2021,
-      priceClass: PriceClass.PRICE_CLASS_100,
     });
   }
 }

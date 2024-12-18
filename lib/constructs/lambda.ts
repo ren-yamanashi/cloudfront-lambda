@@ -1,7 +1,6 @@
 import {
   FunctionUrlAuthType,
   IFunctionUrl,
-  LoggingFormat,
   Runtime,
 } from "aws-cdk-lib/aws-lambda";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
@@ -15,9 +14,8 @@ export class Lambda extends Construct {
     super(scope, id);
 
     const lambda = new NodejsFunction(this, "LambdaHandler", {
-      entry: path.join(__dirname, "../../src/index.ts"),
+      entry: path.join(__dirname, "../../handler/index.ts"),
       runtime: Runtime.NODEJS_20_X,
-      loggingFormat: LoggingFormat.JSON,
     });
 
     this.functionUrl = lambda.addFunctionUrl({

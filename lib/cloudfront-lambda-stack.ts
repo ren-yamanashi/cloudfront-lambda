@@ -8,6 +8,7 @@ export class CloudfrontLambdaStack extends cdk.Stack {
     super(scope, id, props);
 
     const lambda = new Lambda(this, "Lambda");
+
     const cloudfront = new CloudFront(this, "CloudFront", {
       functionUrl: lambda.functionUrl,
     });
