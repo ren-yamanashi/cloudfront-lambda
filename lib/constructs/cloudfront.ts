@@ -3,9 +3,6 @@ import {
   CachePolicy,
   Distribution,
   IDistribution,
-  OriginRequestHeaderBehavior,
-  OriginRequestPolicy,
-  OriginRequestQueryStringBehavior,
   ViewerProtocolPolicy,
 } from "aws-cdk-lib/aws-cloudfront";
 import { FunctionUrlOrigin } from "aws-cdk-lib/aws-cloudfront-origins";
@@ -24,17 +21,6 @@ export class CloudFront extends Construct {
 
     const origin = new FunctionUrlOrigin(props.functionUrl);
 
-    const originRequestPolicy = new OriginRequestPolicy(
-      this,
-      "OriginRequestPolicy",
-      {
-        // NOTE: lambdaにアクセスする際はlambdaのhostをhostヘッダに含める必要がある
-        //       そのため、cloudfrontのhostヘッダを無効化し、originのhostヘッダを有効化する
-        headerBehavior: OriginRequestHeaderBehavior.denyList("Host"),
-        queryStringBehavior: OriginRequestQueryStringBehavior.none(),
-      }
-    );
-
     const cachePolicy = new CachePolicy(this, "CachePolicy", {
       minTtl: Duration.seconds(0),
       maxTtl: Duration.days(365),
@@ -44,7 +30,6 @@ export class CloudFront extends Construct {
     this.distribution = new Distribution(this, "Distribution", {
       defaultBehavior: {
         origin,
-        originRequestPolicy,
         cachePolicy,
         viewerProtocolPolicy: ViewerProtocolPolicy.HTTPS_ONLY,
       },
