@@ -1,16 +1,19 @@
-import * as cdk from 'aws-cdk-lib';
-import { Construct } from 'constructs';
-// import * as sqs from 'aws-cdk-lib/aws-sqs';
+import * as cdk from "aws-cdk-lib";
+import { Construct } from "constructs";
+import { CloudFront } from "./constructs/cloudfront";
+import { Lambda } from "./constructs/lambda";
 
 export class CloudfrontLambdaStack extends cdk.Stack {
-  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+  constructor(scope: Construct, id: string, props: cdk.StackProps) {
     super(scope, id, props);
 
-    // The code that defines your stack goes here
+    const lambda = new Lambda(this, "Lambda");
+    const cloudfront = new CloudFront(this, "CloudFront", {
+      functionUrl: lambda.functionUrl,
+    });
 
-    // example resource
-    // const queue = new sqs.Queue(this, 'CloudfrontLambdaQueue', {
-    //   visibilityTimeout: cdk.Duration.seconds(300)
-    // });
+    new cdk.CfnOutput(this, "Endpoint", {
+      value: cloudfront.distribution.distributionDomainName,
+    });
   }
 }
