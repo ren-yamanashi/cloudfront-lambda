@@ -1,16 +1,19 @@
 import { Duration } from "aws-cdk-lib";
 import {
+  AllowedMethods,
   CachePolicy,
   Distribution,
+  ErrorResponse,
   IDistribution,
+  IOrigin,
+  ResponseHeadersPolicy,
   ViewerProtocolPolicy,
 } from "aws-cdk-lib/aws-cloudfront";
-import { FunctionUrlOrigin } from "aws-cdk-lib/aws-cloudfront-origins";
-import { IFunctionUrl } from "aws-cdk-lib/aws-lambda";
 import { Construct } from "constructs";
 
 export interface CloudFrontProps {
-  readonly functionUrl: IFunctionUrl;
+  readonly origin: IOrigin;
+  readonly errorResponses?: ErrorResponse[];
 }
 
 export class CloudFront extends Construct {
@@ -19,19 +22,34 @@ export class CloudFront extends Construct {
   constructor(scope: Construct, id: string, props: CloudFrontProps) {
     super(scope, id);
 
-    const origin = new FunctionUrlOrigin(props.functionUrl);
-
     const cachePolicy = new CachePolicy(this, "CachePolicy", {
       minTtl: Duration.seconds(0),
       maxTtl: Duration.days(365),
       defaultTtl: Duration.hours(24),
     });
 
+    const responseHeadersPolicy = new ResponseHeadersPolicy(
+      this,
+      "ResponseHeaderPolicy",
+      {
+        corsBehavior: {
+          accessControlAllowOrigins: ["https://example.com"],
+          accessControlAllowHeaders: ["*"],
+          accessControlAllowMethods: ["ALL"],
+          accessControlAllowCredentials: false,
+          originOverride: true,
+        },
+      }
+    );
+
     this.distribution = new Distribution(this, "Distribution", {
+      errorResponses: props.errorResponses,
       defaultBehavior: {
-        origin,
+        allowedMethods: AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
         cachePolicy,
-        viewerProtocolPolicy: ViewerProtocolPolicy.HTTPS_ONLY,
+        viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        origin: props.origin,
+        responseHeadersPolicy,
       },
     });
   }
